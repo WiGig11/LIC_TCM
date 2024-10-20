@@ -13,7 +13,7 @@ import warnings
 from pytorch_msssim import ms_ssim
 from PIL import Image
 warnings.filterwarnings("ignore")
-
+import pdb
 print(torch.cuda.is_available())
 
 
@@ -149,6 +149,23 @@ def main(argv):
                 PSNR += compute_psnr(x, out_net["x_hat"])
                 MS_SSIM += compute_msssim(x, out_net["x_hat"])
                 Bit_rate += compute_bpp(out_net)
+                tensor_image = (out_net["x_hat"] * 255).byte()
+                single_image_tensor = tensor_image.squeeze(0)
+                numpy_image_tensor = single_image_tensor.permute(1, 2, 0).cpu().numpy()
+                x = (x * 255).byte()
+                single_image_x = x.squeeze(0)
+                numpy_image_x = single_image_x.permute(1, 2, 0).cpu().numpy()
+                diff_tensor = torch.abs(out_net["x_hat"] - x)
+                diff_tensor = (diff_tensor * 255).byte()
+                single_image_diff = diff_tensor.squeeze(0)
+                numpy_image_diff = single_image_diff.permute(1, 2, 0).cpu().numpy()
+                width, height = numpy_image_tensor.shape[1], numpy_image_tensor.shape[0]
+                new_width = width * 3
+                new_image = Image.new('RGB', (new_width, height))
+                new_image.paste(Image.fromarray(numpy_image_tensor), (0, 0))
+                new_image.paste(Image.fromarray(numpy_image_x), (width, 0))
+                new_image.paste(Image.fromarray(numpy_image_diff), (width * 2, 0))
+                new_image.save('output_image_'+img_name)
     PSNR = PSNR / count
     MS_SSIM = MS_SSIM / count
     Bit_rate = Bit_rate / count

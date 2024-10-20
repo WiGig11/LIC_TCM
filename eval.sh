@@ -1,0 +1,1 @@
+python eval.py --checkpoint mse_lambda_0.05.pth.tar --data Kodak --cuda
